@@ -759,6 +759,8 @@ namespace SSTUTools
             float topY = currentHeight;
             float innerY = internalNodePosition * scale;
             float bottomY = bottomNodePosition * scale;
+            int bottomSize = Mathf.RoundToInt(bottomDiameter);
+            int topSize = Mathf.RoundToInt(topDiameter);
             Vector3 bottomNodePOs = new Vector3(0, bottomY, 0);
             Vector3 innerNodePos = new Vector3(0, innerY, 0);
             Vector3 topNodePos = new Vector3(0, topY, 0);
@@ -766,17 +768,18 @@ namespace SSTUTools
             AttachNode node = part.FindAttachNode(bottomNodeName);
             if (node != null)
             {
-                SSTUAttachNodeUtils.updateAttachNodePosition(part, node, bottomNodePOs, node.orientation, userInput);
+                SSTUAttachNodeUtils.updateAttachNodePosition(part, node, bottomNodePOs, node.orientation, userInput, topSize);
             }
             node = part.FindAttachNode(internalNodeName);
             if (node != null)
             {
-                SSTUAttachNodeUtils.updateAttachNodePosition(part, node, innerNodePos, node.orientation, userInput);
+                int size = Math.Min(bottomSize, topSize);
+                SSTUAttachNodeUtils.updateAttachNodePosition(part, node, innerNodePos, node.orientation, userInput, size);
             }
             node = part.FindAttachNode(topNodeName);
             if (node != null)
             {
-                SSTUAttachNodeUtils.updateAttachNodePosition(part, node, topNodePos, node.orientation, userInput);
+                SSTUAttachNodeUtils.updateAttachNodePosition(part, node, topNodePos, node.orientation, userInput, topSize);
             }
         }
 
