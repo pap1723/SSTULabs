@@ -240,10 +240,11 @@ namespace SSTUTools
             float scale = currentDiameter / modelDiameter;
             float topY = topNodePosition * scale;
             float bottomY = bottomNodePosition * scale;
+            int size = Mathf.RoundToInt(currentDiameter);
             Vector3 pos = new Vector3(0, topY, 0);
-            SSTUAttachNodeUtils.updateAttachNodePosition(part, topNode, pos, topNode.orientation, userInput);
+            SSTUAttachNodeUtils.updateAttachNodePosition(part, topNode, pos, topNode.orientation, userInput, size);
             pos = new Vector3(0, bottomY, 0);
-            SSTUAttachNodeUtils.updateAttachNodePosition(part, bottomNode, pos, bottomNode.orientation, userInput);
+            SSTUAttachNodeUtils.updateAttachNodePosition(part, bottomNode, pos, bottomNode.orientation, userInput, size);
         }
 
         private void updateTextureSet(bool useDefaults)
