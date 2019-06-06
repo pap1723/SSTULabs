@@ -907,7 +907,7 @@ namespace SSTUTools
                     }
                     else//update its position
                     {
-                        SSTUAttachNodeUtils.updateAttachNodePosition(part, node, pos, orient, userInput);
+                        SSTUAttachNodeUtils.updateAttachNodePosition(part, node, pos, orient, userInput, size);
                     }
                 }
                 else//extra node, destroy
@@ -971,10 +971,11 @@ namespace SSTUTools
             {
                 float currentDiameter = moduleDiameter;
                 float hScale = currentDiameter / definition.diameter;
+                int size = node.size;
                 AttachNodeBaseData surfNodeData = definition.surfaceNode;
                 Vector3 pos = surfNodeData.position * hScale;
                 Vector3 ori = surfNodeData.orientation;
-                SSTUAttachNodeUtils.updateAttachNodePosition(part, node, pos, ori, userInput);
+                SSTUAttachNodeUtils.updateAttachNodePosition(part, node, pos, ori, userInput, size);
                 SSTUAttachNodeUtils.updateSurfaceAttachedChildren(part, prevDiameter, currentDiameter);
             }
         }
@@ -1000,9 +1001,9 @@ namespace SSTUTools
                 pos.x = -pos.x;
                 ori.y = -ori.y;
             }
-            float size = currentHorizontalScale * data.size;
+            int size = Mathf.RoundToInt(data.size * currentHorizontalScale);
             pos.y += modulePosition + getPlacementOffset();
-            SSTUAttachNodeUtils.updateAttachNodePosition(part, node, pos, ori, userInput);
+            SSTUAttachNodeUtils.updateAttachNodePosition(part, node, pos, ori, userInput, size);
         }
 
         #endregion ENDREGION - Public/External methods
