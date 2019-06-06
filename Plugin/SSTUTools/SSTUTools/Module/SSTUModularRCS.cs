@@ -296,12 +296,12 @@ namespace SSTUTools
             AttachNode srfNode = part.srfAttachNode;
             if (srfNode != null)
             {
-                SSTUAttachNodeUtils.updateAttachNodePosition(part, srfNode, pos, Vector3.right, userInput);
+                SSTUAttachNodeUtils.updateAttachNodePosition(part, srfNode, pos, Vector3.right, userInput, 0);
             }
             AttachNode bottomNode = part.FindAttachNode("bottom");
             if (bottomNode != null)
             {
-                SSTUAttachNodeUtils.updateAttachNodePosition(part, bottomNode, pos, bottomNode.orientation, userInput);
+                SSTUAttachNodeUtils.updateAttachNodePosition(part, bottomNode, pos, bottomNode.orientation, userInput, 0);
             }
         }
 
