@@ -250,10 +250,11 @@ namespace SSTUTools.Module
         private void updateAttachNodes(bool userInput)
         {
             AttachNode surface = part.srfAttachNode;
+            int size = Mathf.RoundToInt(diameter / 2);
             if (surface != null)
             {
                 Vector3 pos = new Vector3(surfaceNodeX * getScale(), 0, 0);
-                SSTUAttachNodeUtils.updateAttachNodePosition(part, surface, pos, surface.orientation, userInput);
+                SSTUAttachNodeUtils.updateAttachNodePosition(part, surface, pos, surface.orientation, userInput, size);
             }
         }
 
