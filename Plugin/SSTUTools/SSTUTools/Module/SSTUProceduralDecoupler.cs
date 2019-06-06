@@ -376,15 +376,16 @@ namespace SSTUTools
         public void updateAttachNodePositions(bool userInput)
         {
             float h = height * 0.5f;
+            int size = Mathf.RoundToInt(diameter);
             AttachNode topNode = part.FindAttachNode("top");
             if (topNode != null)
             {
-                SSTUAttachNodeUtils.updateAttachNodePosition(part, topNode, new Vector3(topNode.position.x, h, topNode.position.z), topNode.orientation, userInput);
+                SSTUAttachNodeUtils.updateAttachNodePosition(part, topNode, new Vector3(topNode.position.x, h, topNode.position.z), topNode.orientation, userInput, size);
             }
             AttachNode bottomNode = part.FindAttachNode("bottom");
             if (bottomNode != null)
             {
-                SSTUAttachNodeUtils.updateAttachNodePosition(part, bottomNode, new Vector3(bottomNode.position.x, -h, bottomNode.position.z), bottomNode.orientation, userInput);
+                SSTUAttachNodeUtils.updateAttachNodePosition(part, bottomNode, new Vector3(bottomNode.position.x, -h, bottomNode.position.z), bottomNode.orientation, userInput, size);
             }
         }
 
