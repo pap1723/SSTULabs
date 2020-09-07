@@ -48,12 +48,23 @@ namespace SSTUTools
         private FloatCurve temperatureEfficCurve;
 
         /// <summary>
+        /// Currently tracked sun (used trough reflection by Kerbalism for its Kopernicus multi-star support)
+        /// </summary>
+        private int trackedBodyIndex = 0;
+
+        /// <summary>
         /// Power scaling factor, a multiplier applied to 
         /// </summary>
         public float powerScalar = 1f;
 
+        /// <summary>
+        /// Per-second output calculated on the last update tick
+        /// </summary>
         public float totalOutput = 0f;
 
+        /// <summary>
+        /// The calculated nominal output for current solar panel configuration.
+        /// </summary>
         public float standardPotentialOutput = 0f;
 
         private string panelStatus
@@ -91,6 +102,7 @@ namespace SSTUTools
             this.temperatureEfficCurve.Add(300f, 1f, -0.0008277721f, -0.0008277721f);
             this.temperatureEfficCurve.Add(1200f, 0.1f, -0.0003626566f, -0.0003626566f);
             this.temperatureEfficCurve.Add(2500f, 0.01f, 0f, 0f);
+            this.trackedBodyIndex = 0; //TODO -- get solar target from ?? (in case of multiple stars/reparented stars, etc)
         }
 
         public void onRetractEvent()
@@ -114,6 +126,7 @@ namespace SSTUTools
         {
             int len = data.Length;
             panelData = new PanelData[len];
+            standardPotentialOutput = 0;
             for (int i = 0; i < len; i++)
             {
                 panelData[i] = new PanelData(data[i], roots[i]);
@@ -151,7 +164,7 @@ namespace SSTUTools
             }
             else if(HighLogic.LoadedSceneIsFlight)//sun tracking only active in flight
             {
-                Vector3 sunPos = FlightGlobals.Bodies[0].transform.position;
+                Vector3 sunPos = FlightGlobals.Bodies[trackedBodyIndex].transform.position;
                 if (part.vessel != null && part.vessel.solarFlux > 0)
                 {
                     for (int i = 0; i < len; i++)
@@ -163,7 +176,6 @@ namespace SSTUTools
             //noop in editor if not lerping closed
         }
 
-        //TODO -- get solar target from ?? (in case of multiple stars/reparented stars, etc)
         /// <summary>
         /// Should be called on fixed-update to calculate the EC output from solar panels.  Includes raycasts
         /// for occlusion checks, as well as
@@ -184,6 +196,9 @@ namespace SSTUTools
             if (distMult == 0)//occluded, zero solar flux input on vessel
             {
                 //use current main body as the occluder, even though it might be something else in the case of lunar eclipse/etc
+                //TODO -- analytically determine what the occluding body is;
+                //  use dot product to derive angle angle and check vs angular diameter of each body to see if it is occluding and return the closest occluding body
+                //  somehow calculate partial output for partially occluded sun? 
                 if (FlightGlobals.currentMainBody != null)
                 {
                     panelStatus = "Occluded: " + FlightGlobals.currentMainBody.name;
@@ -194,7 +209,7 @@ namespace SSTUTools
                 }
                 return;
             }
-            Vector3 solarTarget = FlightGlobals.Bodies[0].transform.position;
+            Vector3 solarTarget = FlightGlobals.Bodies[trackedBodyIndex].transform.position;
             string occluder = string.Empty;
             float panelOutput = 0f;
             float totalOutput = 0f;
@@ -211,7 +226,8 @@ namespace SSTUTools
 
             float temperatureMultiplier = temperatureEfficCurve.Evaluate((float)part.temperature);
             totalOutput *= temperatureMultiplier * distMult;//per-second output value
-            //use current this to update gui status before converting to delta time updates
+            //cache total output for use upstream by controller module
+            this.totalOutput = totalOutput;
             if (totalOutput > 0)
             {
                 totalOutput *= powerScalar;
@@ -223,7 +239,6 @@ namespace SSTUTools
             {
                 panelStatus = "Occluded: " + occluder;
             }
-            this.totalOutput = totalOutput * TimeWarp.fixedDeltaTime;
         }
 
         //TODO
@@ -660,7 +675,7 @@ namespace SSTUTools
             //this is the total angle needed to rotate (could be + or -)
             float rawAngle = getRotationAmount(targetPos);
             float absAngle = Mathf.Abs(rawAngle);
-            float frameSpeed = trackingSpeed * Time.deltaTime;
+            float frameSpeed = trackingSpeed * Time.deltaTime * TimeWarp.CurrentRate;
             float frameAngle = 0f;
 
             bool finished = true;

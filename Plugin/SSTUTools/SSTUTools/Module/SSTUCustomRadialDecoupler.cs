@@ -278,7 +278,7 @@ namespace SSTUTools.Module
 
             SSTUResourceList list = new SSTUResourceList();
             fuelType.addResources(list, currentVolume);
-            list.setResourcesToPart(part, 1, false);
+            list.setResourcesToPart(part, 1, HighLogic.LoadedSceneIsFlight);
         }
 
         private void updateMassAndCost()

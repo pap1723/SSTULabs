@@ -423,6 +423,20 @@ namespace SSTUTools
         [KSPField(isPersistant = true)]
         public bool initializedDefaults = false;
 
+        /// <summary>
+        /// Nominal output of the solar panels; 100% thermal efficiency at Kerbin orbit distance from sun (1 KAU).  This value is set when
+        /// the part is initialied and updated any time solar panel layout is changed.  Can be queried in the editor or flight scene to
+        /// determine the current -nominal- EC output of solar panels.
+        /// </summary>
+        [KSPField(isPersistant = true)]
+        public float nominalSolarOutput = 0f;
+
+        [KSPField]
+        public bool subtractMass = true;
+
+        [KSPField]
+        public bool subtractCost = true;
+
         #endregion REGION - Part Config Fields
 
         #region REGION - Private working vars
@@ -548,19 +562,19 @@ namespace SSTUTools
         [KSPEvent]
         public void mountRetractEvent() { mountModule.animationModule.onRetractEvent(); }
 
-        [KSPAction]
+        [KSPAction(guiName = "Toggle Nose Animation")]
         public void noseToggleAction(KSPActionParam param) { noseModule.animationModule.onToggleAction(param); }
 
-        [KSPAction]
+        [KSPAction(guiName = "Toggle Top Animation")]
         public void topToggleAction(KSPActionParam param) { upperModule.animationModule.onToggleAction(param); }
 
-        [KSPAction]
+        [KSPAction(guiName = "Toggle Core Animation")]
         public void coreToggleAction(KSPActionParam param) { coreModule.animationModule.onToggleAction(param); }
 
-        [KSPAction]
+        [KSPAction(guiName = "Toggle Bottom Animation")]
         public void bottomToggleAction(KSPActionParam param) { lowerModule.animationModule.onToggleAction(param); }
 
-        [KSPAction]
+        [KSPAction(guiName = "Toggle Mount Animation")]
         public void mountToggleAction(KSPActionParam param) { mountModule.animationModule.onToggleAction(param); }
 
         [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Deploy Solar Panels")]
@@ -569,7 +583,7 @@ namespace SSTUTools
         [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Retract Solar Panels")]
         public void solarRetractEvent() { solarFunctionsModule.onRetractEvent(); }
 
-        [KSPAction]
+        [KSPAction(guiName = "Toggle Solar Deployment")]
         public void solarToggleAction(KSPActionParam param) { solarModule.animationModule.onToggleAction(param); }
 
         #endregion ENDREGION - UI Events and Actions (buttons and action groups)
@@ -665,15 +679,18 @@ namespace SSTUTools
         //IPartMass/CostModifier override
         public float GetModuleMass(float defaultMass, ModifierStagingSituation sit)
         {
-            if (modifiedMass == -1) { return 0; }
-            return -defaultMass + modifiedMass;
+            if (modifiedMass == -1)
+            {
+                return 0;
+            }
+            return (subtractMass ? -defaultMass : 0) + modifiedMass;
         }
 
         //IPartMass/CostModifier override
         public float GetModuleCost(float defaultCost, ModifierStagingSituation sit)
         {
             if (modifiedCost == -1) { return 0; }
-            return -defaultCost + modifiedCost;
+            return (subtractCost? -defaultCost : 0) + modifiedCost;
         }
 
         //IRecolorable override
@@ -983,6 +1000,8 @@ namespace SSTUTools
             updateAttachNodes(false);
             updateAvailableVariants();
             SSTUStockInterop.updatePartHighlighting(part);
+            SSTUModInterop.updateResourceVolume(part);
+            nominalSolarOutput = solarFunctionsModule.standardPotentialOutput;
         }
         
         /// <summary>
@@ -1096,6 +1115,7 @@ namespace SSTUTools
                     m.solarFunctionsModule.setupSolarPanelData(m.solarModule.getSolarData(), m.solarModule.moduleModelTransforms);
                 });
                 SSTUStockInterop.fireEditorUpdate();
+                nominalSolarOutput = solarFunctionsModule.standardPotentialOutput;
             };
 
             Fields[nameof(currentSolarLayout)].uiControlEditor.onFieldChanged = (a, b) =>
@@ -1106,6 +1126,7 @@ namespace SSTUTools
                     modelChangedAction(m);
                     m.solarFunctionsModule.setupSolarPanelData(m.solarModule.getSolarData(), m.solarModule.moduleModelTransforms);
                 });
+                nominalSolarOutput = solarFunctionsModule.standardPotentialOutput;
             };
 
             Fields[nameof(currentSolarParent)].uiControlEditor.onFieldChanged = (a, b) =>
@@ -1864,6 +1885,49 @@ namespace SSTUTools
         }
 
         #endregion ENDREGION - Custom Update Methods
+
+        #region REGION - Mod Interop
+
+        public Bounds getModuleBounds(string moduleName)
+        {
+            switch (moduleName)
+            {
+                case "NOSE":
+                    return noseModule.getModelBounds();
+                case "UPPER":
+                    return upperModule.getModelBounds();
+                case "CORE":
+                    return coreModule.getModelBounds();
+                case "LOWER":
+                    return lowerModule.getModelBounds();
+                case "MOUNT":
+                    return mountModule.getModelBounds();
+                case "NONE":
+                    return new Bounds();
+                case "SOLAR":
+                    return solarModule.getModelBounds();
+                case "UPPERRCS":
+                    return upperRcsModule.getModelBounds();
+                case "LOWERRCS":
+                    return lowerRcsModule.getModelBounds();
+                default:
+                    return new Bounds();
+            }
+
+        }
+
+        public Bounds getModuleBounds(string[] moduleNames)
+        {
+            Bounds bounds = new Bounds();
+            int len = moduleNames.Length;
+            for (int i = 0; i < len; i++)
+            {
+                bounds.Encapsulate(getModuleBounds(moduleNames[i]));
+            }
+            return bounds;
+        }
+
+        #endregion
 
     }
 
